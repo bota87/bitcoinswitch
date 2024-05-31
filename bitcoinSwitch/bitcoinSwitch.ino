@@ -1,3 +1,8 @@
+///////////////////////////////////////////////////////////////////////////////////
+//         Change these variables directly in the code or use the config         //
+//  form in the web-installer https://lnbits.github.io/bitcoinswitch/installer/  //
+///////////////////////////////////////////////////////////////////////////////////
+
 String version = "0.1.1";
 
 #include <config.h>
@@ -6,6 +11,7 @@ String version = "0.1.1";
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
 #include <WebSocketsClient.h>
+#include <Servo.h>
 
 fs::SPIFFSFS &FlashFS = SPIFFS;
 #define FORMAT_ON_FAIL true
@@ -26,11 +32,14 @@ bool paid;
 bool down = false;
 long thresholdSum = 0;
 long payment_amount = 0;
+unsigned long lightOffTime = 0;   // 0 = light off;
+unsigned long lightAlertTime = 0; // 0 = light off;
 
 // Serial config
 int portalPin = 4;
 
 WebSocketsClient webSocket;
+Servo servo1;
 
 struct KeyValue
 {
@@ -44,23 +53,24 @@ void setup()
     Serial.println("Welcome to BitcoinSwitch, running on version: " + version);
     bool triggerConfig = false;
     pinMode(2, OUTPUT); // To blink on board LED
+    pinMode(ledPin, OUTPUT);
     FlashFS.begin(FORMAT_ON_FAIL);
-    int timer = 0;
-    while (timer < 2000)
-    {
-        digitalWrite(2, HIGH);
-        Serial.println(touchRead(portalPin));
-        if (touchRead(portalPin) < 60)
-        {
-            triggerConfig = true;
-            timer = 5000;
-        }
+    // int timer = 0;
+    // while (timer < 2000)
+    // {
+    //     digitalWrite(2, HIGH);
+    //     Serial.println(touchRead(portalPin));
+    //     if (touchRead(portalPin) < 60)
+    //     {
+    //         triggerConfig = true;
+    //         timer = 5000;
+    //     }
 
-        timer = timer + 100;
-        delay(150);
-        digitalWrite(2, LOW);
-        delay(150);
-    }
+    //     timer = timer + 100;
+    //     delay(150);
+    //     digitalWrite(2, LOW);
+    //     delay(150);
+    // }
 
     readFiles(); // get the saved details and store in global variables
 
@@ -78,28 +88,37 @@ void setup()
             Serial.print(".");
             delay(500);
             digitalWrite(2, HIGH);
+            digitalWrite(ledPin, HIGH);
             Serial.print(".");
             delay(500);
             digitalWrite(2, LOW);
+            digitalWrite(ledPin, LOW);
         }
+        Serial.println("");
     }
+
+    if (servo1.attach(servoPin))
+        Serial.println("Servo attached on pin: " + String(servoPin));
+    else
+        Serial.println("ERROR: failed to attach servo on pin " + String(servoPin));
 
     if (threshold != 0)
     { // Use in threshold mode
-        Serial.println("");
         Serial.println("Using threshold mode");
         Serial.println("Connecting to websocket: " + urlPrefix + lnbitsServer + apiUrl + wallet);
         webSocket.beginSSL(lnbitsServer, 443, apiUrl + wallet);
     }
     else
     { // Use in normal mode
-        Serial.println("");
         Serial.println("Using normal mode");
         Serial.println("Connecting to websocket: " + urlPrefix + lnbitsServer + apiUrl + deviceId);
         webSocket.beginSSL(lnbitsServer, 443, apiUrl + deviceId);
     }
     webSocket.onEvent(webSocketEvent);
     webSocket.setReconnectInterval(1000);
+
+    pinMode(openPin, INPUT_PULLUP);
+    pinMode(lightPin, OUTPUT);
 }
 
 void loop()
@@ -110,49 +129,93 @@ void loop()
         delay(500);
     }
     digitalWrite(2, LOW);
+    digitalWrite(ledPin, LOW);
     payloadStr = "";
     delay(2000);
+
+    bool openDoor = false;
+    bool turnLightOn = false;
+
     while (paid == false)
-    { // loop and wait for payment
+    {
+        int duration = 0;
+        if (digitalRead(openPin) == LOW)
+        {
+            Serial.println("Forzata apertura e illuminazione per 1 minuto");
+            openDoor = true;
+            turnLightOn = true;
+            duration = 60 * 1000;
+        }
+        if (lightOffTime > 0)
+        {
+            unsigned int time = millis();
+            if (lightAlertTime > 0 && time > lightAlertTime)
+            {
+                Serial.println("Tra " + String(alertSecondsBerforeOff) + " secondi spengo le luci");
+                digitalWrite(lightPin, LOW);
+                delay(500);
+                digitalWrite(lightPin, HIGH);
+                lightAlertTime = 0;
+            }
+            else if (time > lightOffTime)
+            {
+                Serial.println("Spengo le luci");
+                digitalWrite(lightPin, LOW);
+                lightOffTime = 0;
+            }
+        }
         webSocket.loop();
         if (paid)
         {
-            if (threshold != 0)
-            { // If in threshold mode we check the "balance" pushed by the websocket and use the pin/time preset
-                StaticJsonDocument<1900> doc;
-                DeserializationError error = deserializeJson(doc, payloadStr);
-                if (error)
-                {
-                    Serial.print("deserializeJson() failed: ");
-                    Serial.println(error.c_str());
-                    return;
-                }
-                JsonObject payment = doc["payment"];
-                payment_amount = payment["amount"];
-                thresholdSum = thresholdSum + payment_amount;
-                Serial.println("thresholdSum: " + String(thresholdSum));
-                Serial.println("threshold: " + String((threshold * 1000)));
-                Serial.println("thresholdPin: " + String(thresholdPin));
-                if (thresholdSum >= (threshold * 1000))
-                {
-                    pinMode(thresholdPin, OUTPUT);
-                    digitalWrite(thresholdPin, HIGH);
-                    delay(thresholdTime);
-                    digitalWrite(thresholdPin, LOW);
-                    thresholdSum = 0;
-                }
-            }
+            if (getValue(payloadStr, '-', 0).toInt() == lightPin)
+                turnLightOn = true;
             else
-            { // If in normal mode we use the pin/time pushed by the websocket
-                pinMode(getValue(payloadStr, '-', 0).toInt(), OUTPUT);
-                digitalWrite(getValue(payloadStr, '-', 0).toInt(), HIGH);
-                delay(getValue(payloadStr, '-', 1).toInt());
-                digitalWrite(getValue(payloadStr, '-', 0).toInt(), LOW);
-            }
+                openDoor = true;
+            duration = getValue(payloadStr, '-', 1).toInt();
+        }
+        if (turnLightOn)
+        {
+            TurnLightOn(duration);
+            turnLightOn = false;
+        }
+        if (openDoor)
+        {
+            OpenDoor();
+            openDoor = false;
         }
     }
     Serial.println("Paid");
     paid = false;
+}
+
+void TurnLightOn(int duration)
+{
+    if (lightOffTime == 0)
+        lightOffTime = millis();
+    lightOffTime += duration;
+    lightAlertTime = lightOffTime - alertSecondsBerforeOff * 1000;
+    Serial.println("Accendo le luci per " + String(duration) + " ms");
+    digitalWrite(lightPin, HIGH);
+    digitalWrite(2, HIGH);
+    digitalWrite(ledPin, HIGH);
+    delay(500);
+    digitalWrite(2, LOW);
+    digitalWrite(ledPin, LOW);
+}
+
+void OpenDoor()
+{
+    digitalWrite(2, HIGH);
+    digitalWrite(ledPin, HIGH);
+    servo1.write(openDegree);
+    Serial.println("Servo aperto: " + String(openDegree));
+
+    delay(2000);
+
+    servo1.write(closeDegree);
+    digitalWrite(2, LOW);
+    digitalWrite(ledPin, LOW);
+    Serial.println("Servo chiuso: " + String(closeDegree));
 }
 
 //////////////////HELPERS///////////////////
