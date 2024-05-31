@@ -44,23 +44,25 @@ void setup()
     Serial.println("Welcome to BitcoinSwitch, running on version: " + version);
     bool triggerConfig = false;
     pinMode(2, OUTPUT); // To blink on board LED
+    pinMode(ledPin, OUTPUT);
+    pinMode(switchPIN, INPUT);
     FlashFS.begin(FORMAT_ON_FAIL);
-    int timer = 0;
-    while (timer < 2000)
-    {
-        digitalWrite(2, HIGH);
-        Serial.println(touchRead(portalPin));
-        if (touchRead(portalPin) < 60)
-        {
-            triggerConfig = true;
-            timer = 5000;
-        }
+    // int timer = 0;
+    // while (timer < 2000)
+    // {
+    //     digitalWrite(2, HIGH);
+    //     Serial.println(touchRead(portalPin));
+    //     if (touchRead(portalPin) < 60)
+    //     {
+    //         triggerConfig = true;
+    //         timer = 5000;
+    //     }
 
-        timer = timer + 100;
-        delay(150);
-        digitalWrite(2, LOW);
-        delay(150);
-    }
+    //     timer = timer + 100;
+    //     delay(150);
+    //     digitalWrite(2, LOW);
+    //     delay(150);
+    // }
 
     readFiles(); // get the saved details and store in global variables
 
@@ -78,9 +80,11 @@ void setup()
             Serial.print(".");
             delay(500);
             digitalWrite(2, HIGH);
+            digitalWrite(ledPin, LOW);
             Serial.print(".");
             delay(500);
             digitalWrite(2, LOW);
+            digitalWrite(ledPin, HIGH);
         }
     }
 
@@ -106,10 +110,14 @@ void loop()
 {
     while (WiFi.status() != WL_CONNECTED)
     { // check wifi again
+        digitalWrite(2, HIGH);
+        digitalWrite(ledPin, LOW);
+
         Serial.println("Failed to connect");
         delay(500);
     }
     digitalWrite(2, LOW);
+    digitalWrite(ledPin, HIGH);
     payloadStr = "";
     delay(2000);
     while (paid == false)
@@ -144,10 +152,17 @@ void loop()
             }
             else
             { // If in normal mode we use the pin/time pushed by the websocket
-                pinMode(getValue(payloadStr, '-', 0).toInt(), OUTPUT);
-                digitalWrite(getValue(payloadStr, '-', 0).toInt(), HIGH);
-                delay(getValue(payloadStr, '-', 1).toInt());
-                digitalWrite(getValue(payloadStr, '-', 0).toInt(), LOW);
+                pinMode(switchPIN, OUTPUT);
+                digitalWrite(switchPIN, LOW);
+                digitalWrite(2, HIGH);
+                digitalWrite(ledPin, LOW);
+
+                int duration = getValue(payloadStr, '-', 1).toInt();
+                delay(duration);
+
+                pinMode(switchPIN, INPUT);
+                digitalWrite(2, LOW);
+                digitalWrite(ledPin, HIGH);
             }
         }
     }
