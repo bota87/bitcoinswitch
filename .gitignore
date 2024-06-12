@@ -6,3 +6,5 @@ installer/firmware
 dist
 build
 firmware.zip
+bitcoinSwitch/*.ino.cpp
+bitcoinSwitch/config*.h
