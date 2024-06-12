@@ -1,6 +1,6 @@
 String version = "0.1.1";
 
-#include <config.h> 
+#include <config.h>
 #include <WiFi.h>
 #include <FS.h>
 #include <SPIFFS.h>
@@ -32,7 +32,8 @@ int portalPin = 4;
 
 WebSocketsClient webSocket;
 
-struct KeyValue {
+struct KeyValue
+{
     String key;
     String value;
 };
@@ -42,7 +43,7 @@ void setup()
     Serial.begin(115200);
     Serial.println("Welcome to BitcoinSwitch, running on version: " + version);
     bool triggerConfig = false;
-    pinMode (2, OUTPUT); // To blink on board LED
+    pinMode(2, OUTPUT); // To blink on board LED
     FlashFS.begin(FORMAT_ON_FAIL);
     int timer = 0;
     while (timer < 2000)
@@ -63,14 +64,17 @@ void setup()
 
     readFiles(); // get the saved details and store in global variables
 
-    if(triggerConfig == true || ssid == "" || ssid == "null"){
+    if (triggerConfig == true || ssid == "" || ssid == "null")
+    {
         Serial.println("Launch serial config");
         configOverSerialPort();
     }
-    else{
+    else
+    {
         WiFi.begin(ssid.c_str(), wifiPassword.c_str());
         Serial.print("Connecting to WiFi");
-        while (WiFi.status() != WL_CONNECTED) {
+        while (WiFi.status() != WL_CONNECTED)
+        {
             Serial.print(".");
             delay(500);
             digitalWrite(2, HIGH);
@@ -80,13 +84,15 @@ void setup()
         }
     }
 
-    if(threshold != 0){ // Use in threshold mode
+    if (threshold != 0)
+    { // Use in threshold mode
         Serial.println("");
         Serial.println("Using threshold mode");
         Serial.println("Connecting to websocket: " + urlPrefix + lnbitsServer + apiUrl + wallet);
         webSocket.beginSSL(lnbitsServer, 443, apiUrl + wallet);
     }
-    else{ // Use in normal mode
+    else
+    { // Use in normal mode
         Serial.println("");
         Serial.println("Using normal mode");
         Serial.println("Connecting to websocket: " + urlPrefix + lnbitsServer + apiUrl + deviceId);
@@ -96,21 +102,27 @@ void setup()
     webSocket.setReconnectInterval(1000);
 }
 
-void loop() {
-    while(WiFi.status() != WL_CONNECTED){ // check wifi again
+void loop()
+{
+    while (WiFi.status() != WL_CONNECTED)
+    { // check wifi again
         Serial.println("Failed to connect");
         delay(500);
     }
     digitalWrite(2, LOW);
     payloadStr = "";
     delay(2000);
-    while(paid == false){ // loop and wait for payment
+    while (paid == false)
+    { // loop and wait for payment
         webSocket.loop();
-        if(paid){
-            if(threshold != 0){ // If in threshold mode we check the "balance" pushed by the websocket and use the pin/time preset
+        if (paid)
+        {
+            if (threshold != 0)
+            { // If in threshold mode we check the "balance" pushed by the websocket and use the pin/time preset
                 StaticJsonDocument<1900> doc;
                 DeserializationError error = deserializeJson(doc, payloadStr);
-                if (error) {
+                if (error)
+                {
                     Serial.print("deserializeJson() failed: ");
                     Serial.println(error.c_str());
                     return;
@@ -121,15 +133,17 @@ void loop() {
                 Serial.println("thresholdSum: " + String(thresholdSum));
                 Serial.println("threshold: " + String((threshold * 1000)));
                 Serial.println("thresholdPin: " + String(thresholdPin));
-                if(thresholdSum >= (threshold * 1000)){
-                    pinMode (thresholdPin, OUTPUT);
+                if (thresholdSum >= (threshold * 1000))
+                {
+                    pinMode(thresholdPin, OUTPUT);
                     digitalWrite(thresholdPin, HIGH);
                     delay(thresholdTime);
                     digitalWrite(thresholdPin, LOW);
                     thresholdSum = 0;
                 }
             }
-            else{ // If in normal mode we use the pin/time pushed by the websocket
+            else
+            { // If in normal mode we use the pin/time pushed by the websocket
                 pinMode(getValue(payloadStr, '-', 0).toInt(), OUTPUT);
                 digitalWrite(getValue(payloadStr, '-', 0).toInt(), HIGH);
                 delay(getValue(payloadStr, '-', 1).toInt());
@@ -146,27 +160,31 @@ void loop() {
 String getValue(String data, char separator, int index)
 {
     int found = 0;
-    int strIndex[] = { 0, -1 };
+    int strIndex[] = {0, -1};
     int maxIndex = data.length() - 1;
-    for (int i = 0; i <= maxIndex && found <= index; i++) {
-        if (data.charAt(i) == separator || i == maxIndex) {
+    for (int i = 0; i <= maxIndex && found <= index; i++)
+    {
+        if (data.charAt(i) == separator || i == maxIndex)
+        {
             found++;
             strIndex[0] = strIndex[1] + 1;
-            strIndex[1] = (i == maxIndex) ? i+1 : i;
+            strIndex[1] = (i == maxIndex) ? i + 1 : i;
         }
     }
     return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-String getJsonValue(JsonDocument &doc, const char* name)
+String getJsonValue(JsonDocument &doc, const char *name)
 {
-    for (JsonObject elem : doc.as<JsonArray>()) {
-        if (strcmp(elem["name"], name) == 0) {
+    for (JsonObject elem : doc.as<JsonArray>())
+    {
+        if (strcmp(elem["name"], name) == 0)
+        {
             String value = elem["value"].as<String>();
             return value;
         }
     }
-    return "";  // return empty string if not found
+    return ""; // return empty string if not found
 }
 
 void readFiles()
@@ -176,54 +194,63 @@ void readFiles()
     {
         StaticJsonDocument<2500> doc;
         DeserializationError error = deserializeJson(doc, paramFile.readString());
-        if(error){
+        if (error)
+        {
             Serial.print("deserializeJson() failed: ");
             Serial.println(error.c_str());
             return;
         }
-        if(ssid == "null"){ // check ssid is not set above
+        if (ssid == "null")
+        { // check ssid is not set above
             ssid = getJsonValue(doc, "ssid");
             Serial.println("");
             Serial.println("ssid used from memory");
             Serial.println("SSID: " + ssid);
         }
-        else{
+        else
+        {
             Serial.println("");
             Serial.println("ssid hardcoded");
             Serial.println("SSID: " + ssid);
         }
-        if(wifiPassword == "null"){ // check wifiPassword is not set above
+        if (wifiPassword == "null")
+        { // check wifiPassword is not set above
             wifiPassword = getJsonValue(doc, "wifipassword");
             Serial.println("");
             Serial.println("ssid password used from memory");
             Serial.println("SSID password: " + wifiPassword);
         }
-        else{
+        else
+        {
             Serial.println("");
             Serial.println("ssid password hardcoded");
             Serial.println("SSID password: " + wifiPassword);
         }
-        if(switchStr == "null"){ // check switchStr is not set above
+        if (switchStr == "null")
+        { // check switchStr is not set above
             switchStr = getJsonValue(doc, "socket");
             Serial.println("");
             Serial.println("switchStr used from memory");
             Serial.println("switchStr: " + switchStr);
         }
-        else{
+        else
+        {
             Serial.println("");
             Serial.println("switchStr hardcoded");
             Serial.println("switchStr: " + switchStr);
         }
 
         int protocolIndex = switchStr.indexOf("://");
-        if (protocolIndex == -1) {
+        if (protocolIndex == -1)
+        {
             Serial.println("Invalid switchStr: " + switchStr);
             return;
         }
         urlPrefix = switchStr.substring(0, protocolIndex + 3);
 
         int domainIndex = switchStr.indexOf("/", protocolIndex + 3);
-        if (domainIndex == -1) {
+        if (domainIndex == -1)
+        {
             Serial.println("Invalid switchStr: " + switchStr);
             return;
         }
@@ -242,26 +269,28 @@ void readFiles()
 
 //////////////////WEBSOCKET///////////////////
 
-void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
-    switch(type) {
-        case WStype_DISCONNECTED:
-            Serial.printf("[WSc] Disconnected!\n");
-            break;
-        case WStype_CONNECTED:
-            Serial.printf("[WSc] Connected to url: %s\n",  payload);
-            webSocket.sendTXT("Connected"); // send message to server when Connected
-            break;
-        case WStype_TEXT:
-            payloadStr = (char*)payload;
-            payloadStr.replace(String("'"), String('"'));
-            payloadStr.toLowerCase();
-            Serial.println("Received data from socket: " + payloadStr);
-            paid = true;
-        case WStype_ERROR:
-        case WStype_FRAGMENT_TEXT_START:
-        case WStype_FRAGMENT_BIN_START:
-        case WStype_FRAGMENT:
-        case WStype_FRAGMENT_FIN:
-            break;
+void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
+{
+    switch (type)
+    {
+    case WStype_DISCONNECTED:
+        Serial.printf("[WSc] Disconnected!\n");
+        break;
+    case WStype_CONNECTED:
+        Serial.printf("[WSc] Connected to url: %s\n", payload);
+        webSocket.sendTXT("Connected"); // send message to server when Connected
+        break;
+    case WStype_TEXT:
+        payloadStr = (char *)payload;
+        payloadStr.replace(String("'"), String('"'));
+        payloadStr.toLowerCase();
+        Serial.println("Received data from socket: " + payloadStr);
+        paid = true;
+    case WStype_ERROR:
+    case WStype_FRAGMENT_TEXT_START:
+    case WStype_FRAGMENT_BIN_START:
+    case WStype_FRAGMENT:
+    case WStype_FRAGMENT_FIN:
+        break;
     }
 }
