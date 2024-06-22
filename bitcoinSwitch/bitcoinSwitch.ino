@@ -45,22 +45,22 @@ void setup()
     bool triggerConfig = false;
     pinMode(2, OUTPUT); // To blink on board LED
     FlashFS.begin(FORMAT_ON_FAIL);
-    int timer = 0;
-    while (timer < 2000)
-    {
-        digitalWrite(2, HIGH);
-        Serial.println(touchRead(portalPin));
-        if (touchRead(portalPin) < 60)
-        {
-            triggerConfig = true;
-            timer = 5000;
-        }
+    // int timer = 0;
+    // while (timer < 2000)
+    // {
+    //     digitalWrite(2, HIGH);
+    //     Serial.println(touchRead(portalPin));
+    //     if (touchRead(portalPin) < 60)
+    //     {
+    //         triggerConfig = true;
+    //         timer = 5000;
+    //     }
 
-        timer = timer + 100;
-        delay(150);
-        digitalWrite(2, LOW);
-        delay(150);
-    }
+    //     timer = timer + 100;
+    //     delay(150);
+    //     digitalWrite(2, LOW);
+    //     delay(150);
+    // }
 
     readFiles(); // get the saved details and store in global variables
 
@@ -144,10 +144,10 @@ void loop()
             }
             else
             { // If in normal mode we use the pin/time pushed by the websocket
-                pinMode(getValue(payloadStr, '-', 0).toInt(), OUTPUT);
-                digitalWrite(getValue(payloadStr, '-', 0).toInt(), HIGH);
-                delay(getValue(payloadStr, '-', 1).toInt());
-                digitalWrite(getValue(payloadStr, '-', 0).toInt(), LOW);
+                pinMode(switchPIN, OUTPUT);
+                digitalWrite(switchPIN, HIGH);
+                delay(durationms);
+                digitalWrite(switchPIN, LOW);
             }
         }
     }
@@ -198,7 +198,7 @@ void readFiles()
         {
             Serial.print("deserializeJson() failed: ");
             Serial.println(error.c_str());
-            return;
+            //return;
         }
         if (ssid == "null")
         { // check ssid is not set above
