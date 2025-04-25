@@ -1,48 +1,20 @@
-#include "config-distributore-lattine.h"
+#include "config-pandorino.h"
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <WebSocketsClient.h>
-
-struct Coin
-{
-    double value;
-    int gpio;
-};
-
-// Dichiarazione delle monete con relative GPIO
-Coin coins[] = {
-    //    {1.00, 4},
-    //    {0.50, 17},
-    //    {0.20, 15},
-    {0.05, 16}};
 
 String payloadStr;
 bool paid, webSocketConnected;
 
 WebSocketsClient webSocket;
 
-struct KeyValue
-{
-    String key;
-    String value;
-};
-
-void webSocketEvent(WStype_t type, uint8_t *payload, size_t length);
 void ElaboraPagamento();
-void inviaImporto(double amount);
-void inviaMoneta(Coin &coin);
+void webSocketEvent(WStype_t type, uint8_t *payload, size_t length);
 
 void setup()
 {
     Serial.begin(115200);
     Serial.println("Welcome to BitcoinSwitch");
-
-    // Imposta i pin che simulano la gettoniera come output
-    for (Coin &coin : coins)
-    {
-        pinMode(coin.gpio, OUTPUT);
-        digitalWrite(coin.gpio, HIGH);
-    }
 
     pinMode(LED_BUILTIN, OUTPUT); // To blink on board LED
 
@@ -100,39 +72,10 @@ void ElaboraPagamento()
     double paidAmount = extra["wallet_fiat_amount"];
     Serial.println("paidAmount: " + String(paidAmount));
 
-    // Aumento l'importo pagato per considerare lo sconto in percentuale sui prodotti
-    double fullAmount = paidAmount / (1 - (DiscountPerc / 100));
-    Serial.println("fullAmount: " + String(fullAmount));
-
-    if (true)
-    {
-        // Per semplicità imposto importo fisso
-        fullAmount = 3;
-        Serial.println("FORZATO fullAmount: " + String(fullAmount));
-    }
-
-    inviaImporto(fullAmount);
-}
-
-void inviaImporto(double amount)
-{
-    for (Coin &coin : coins)
-    {
-        while (amount >= coin.value)
-        {
-            inviaMoneta(coin);
-            amount -= coin.value;
-        }
-    }
-}
-
-void inviaMoneta(Coin &coin)
-{
-    Serial.println("Invio: " + String(coin.value));
-    digitalWrite(coin.gpio, LOW);
-    delay(10);
-    digitalWrite(coin.gpio, HIGH);
-    delay(50);
+    pinMode(switchPIN, OUTPUT);
+    digitalWrite(switchPIN, HIGH);
+    delay(durationms);
+    digitalWrite(switchPIN, LOW);
 }
 
 //////////////////WEBSOCKET///////////////////
