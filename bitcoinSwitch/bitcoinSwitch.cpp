@@ -1,4 +1,4 @@
-#include "config-pandorino.h"
+#include "config-pandorone.h"
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <WebSocketsClient.h>
@@ -23,6 +23,13 @@ void setup()
 {
     Serial.begin(115200);
     Serial.println("Welcome to BitcoinSwitch");
+
+    // Aspetto 1 secondo e accendo la TV
+    delay(1000);
+    pinMode(tvPIN, OUTPUT);
+    digitalWrite(tvPIN, HIGH);
+    delay(500);
+    digitalWrite(tvPIN, LOW);
 
     pinMode(LED_BUILTIN, OUTPUT); // To blink on board LED
 
