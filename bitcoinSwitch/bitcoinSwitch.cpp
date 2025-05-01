@@ -11,8 +11,8 @@ struct Coin
 
 // Dichiarazione delle monete con relative GPIO
 Coin coins[] = {
-    {1.00, 23},  // LV1 1.00
-    {0.50, 21},  // LV3 0.50
+//    {1.00, 23},  // LV1 1.00
+//    {0.50, 21},  // LV3 0.50
     {0.20, 22},  // LV2 0.20
     {0.05, 19}}; // LV4 0.05
 
@@ -25,18 +25,19 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length);
 void ElaboraPagamento();
 void inviaImporto(double amount);
 void inviaMoneta(Coin &coin);
+void TestCoin();
 
 void setup()
 {
     Serial.begin(115200);
     Serial.println("Welcome to BitcoinSwitch");
 
-    // Imposta i pin che simulano la gettoniera come output
+    pinMode(TEST_COIN_BUTTON, INPUT_PULLUP);
+
+    // I pin che simulano la gettoniera vanno messi come output solo quando si vuole simulare l'inserimento di una moneta
+    // altrimenti la gettoniera non funziona più
     for (Coin &coin : coins)
-    {
-        pinMode(coin.gpio, OUTPUT);
-        digitalWrite(coin.gpio, HIGH);
-    }
+        pinMode(coin.gpio, INPUT);
 
     pinMode(LED_BUILTIN, OUTPUT); // To blink on board LED
 
@@ -64,6 +65,9 @@ void setup()
 
 void loop()
 {
+    if (digitalRead(TEST_COIN_BUTTON) == LOW)
+        TestCoin();
+
     webSocket.loop();
     digitalWrite(LED_BUILTIN, webSocketConnected); // il led rappresenta lo stato del web socket
 
@@ -116,6 +120,7 @@ void inviaImporto(double amount)
         {
             inviaMoneta(coin);
             amount -= coin.value;
+            amount = round(amount * 100.0) / 100.0; // arrotondo al secondo decimale
         }
     }
 }
@@ -123,10 +128,20 @@ void inviaImporto(double amount)
 void inviaMoneta(Coin &coin)
 {
     Serial.println("Invio: " + String(coin.value));
+    pinMode(coin.gpio, OUTPUT);
     digitalWrite(coin.gpio, LOW);
-    delay(10);
-    digitalWrite(coin.gpio, HIGH);
-    delay(50);
+    delay(10); // 10
+    pinMode(coin.gpio, INPUT);
+    delay(50); // 50
+}
+
+void TestCoin()
+{
+    Serial.println("Provo tutte le monete");
+    digitalWrite(LED_BUILTIN, LOW); // durante il test spengo il led
+    for (Coin &coin : coins)
+        inviaMoneta(coin);
+    digitalWrite(LED_BUILTIN, HIGH);
 }
 
 //////////////////WEBSOCKET///////////////////
