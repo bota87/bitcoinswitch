@@ -16,8 +16,16 @@ Coin coins[] = {
     {0.20, 22},  // LV2 0.20
     {0.05, 19}}; // LV4 0.05
 
-String payloadStr;
-bool paid, webSocketConnected;
+String payloadStr = "";
+bool paid = false;
+
+unsigned long lightOffTime = 0;
+unsigned long lightAlertTime = 0;
+unsigned long lastPingTime = 0;
+unsigned long lastMessageTime = 0;
+const unsigned long pingInterval = 10000;       // ogni 10s invia ping
+const unsigned long maxSilentTime = 30000;      // se non riceve nulla per 30s, considera la connessione persa
+
 
 WebSocketsClient webSocket;
 
@@ -69,7 +77,27 @@ void loop()
         TestCoin();
 
     webSocket.loop();
-    digitalWrite(LED_BUILTIN, webSocketConnected); // il led rappresenta lo stato del web socket
+
+    bool isActuallyConnected = webSocket.isConnected();
+    digitalWrite(LED_BUILTIN, isActuallyConnected); // il led rappresenta lo stato del web socket
+
+    unsigned long now = millis();
+
+    // Invio ping periodico
+    if (isActuallyConnected && now - lastPingTime > pingInterval)
+    {
+        Serial.println("Invio ping...");
+        webSocket.sendPing();
+        lastPingTime = now;
+    }
+
+    // Timeout di inattività
+    if (isActuallyConnected && (now - lastMessageTime > maxSilentTime))
+    {
+        Serial.println("WebSocket inattivo troppo a lungo, forzo disconnessione...");
+        webSocket.disconnect();
+        lastMessageTime = now; // resetto altrimenti disconnette in continuazione
+    }
 
     if (!paid)
         return;
@@ -152,12 +180,15 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     {
     case WStype_DISCONNECTED:
         Serial.printf("[WSc] Disconnected!\n");
-        webSocketConnected = false;
         break;
     case WStype_CONNECTED:
         Serial.printf("[WSc] Connected to url: %s\n", payload);
         webSocket.sendTXT("Connected"); // send message to server when Connected
-        webSocketConnected = true;
+        lastMessageTime = millis();
+        break;
+    case WStype_PONG:
+        Serial.println("Pong ricevuto");
+        lastMessageTime = millis();
         break;
     case WStype_TEXT:
         payloadStr = (char *)payload;
@@ -165,11 +196,10 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
         payloadStr.toLowerCase();
         Serial.println("Received data from socket: " + payloadStr);
         paid = true;
+        lastMessageTime = millis();
+        break;
     case WStype_ERROR:
-    case WStype_FRAGMENT_TEXT_START:
-    case WStype_FRAGMENT_BIN_START:
-    case WStype_FRAGMENT:
-    case WStype_FRAGMENT_FIN:
+        Serial.println("[WSc] Errore WebSocket");
         break;
     }
 }
