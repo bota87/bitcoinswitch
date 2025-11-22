@@ -1,7 +1,8 @@
+#include "300_tft.h"
 #ifdef TFT
-#include <TFT_eSPI.h>
 TFT_eSPI tft = TFT_eSPI(TFT_WIDTH, TFT_HEIGHT);
-void setupTFT() {
+void setupTFT()
+{
   tft.init();
   Serial.println("TFT: " + String(TFT_WIDTH) + "x" + String(TFT_HEIGHT));
   Serial.println("TFT pin MISO: " + String(TFT_MISO));
@@ -15,54 +16,60 @@ void setupTFT() {
   tft.invertDisplay(true);
   tft.fillScreen(TFT_BLACK);
 }
-void printTFT(String message, int x, int y) {
+void printTFT(String message, int x, int y)
+{
   tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE);
   tft.setCursor(x, y);
   tft.println(message);
 }
-void printHome(bool wifi, bool ws, bool ping) {
-  if (ping) {
+void printHome(bool wifi, bool ws, bool ping)
+{
+  if (ping)
     tft.fillScreen(TFT_BLUE);
-  } else {
+  else
     tft.fillScreen(TFT_BLACK);
-  }
   tft.setTextSize(2);
   tft.setTextColor(TFT_YELLOW);
   tft.setCursor(21, 21);
   tft.println("BitcoinSwitch");
   tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE);
-  if (wifi) {
+  if (wifi)
+  {
     tft.setCursor(21, 69);
     tft.println("WiFi connected!");
-  } else {
+  }
+  else
+  {
     tft.setCursor(21, 69);
     tft.setTextColor(TFT_RED);
     tft.println("No WiFi!");
   }
   tft.setCursor(21, 95);
-  if (ws) {
-    if (ping) {
+  if (ws)
+  {
+    if (ping)
+    {
       tft.setTextColor(TFT_WHITE);
       tft.println("WS ping!");
-    } else {
+    }
+    else
+    {
       tft.setTextColor(TFT_GREEN);
       tft.println("WS connected!");
     }
   }
-  else {
+  else
+  {
     tft.setTextColor(TFT_RED);
     tft.println("No WS!");
   }
 }
-void clearTFT() {
-  tft.fillScreen(TFT_BLACK);
-}
-void flashTFT() {
-  tft.fillScreen(TFT_GREEN);
-}
+void clearTFT() { tft.fillScreen(TFT_BLACK); }
+void flashTFT() { tft.fillScreen(TFT_GREEN); }
 #else
+void setupTFT() {}
 void printTFT(String message, int x, int y) {}
 void printHome(bool wifi, bool ws, bool ping) {}
 void clearTFT() {}
