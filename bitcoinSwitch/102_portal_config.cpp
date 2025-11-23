@@ -1,5 +1,6 @@
 #include "102_portal_config.h"
 
+#ifndef HARDCODED
 #define AP_PASSWORD "111222333"
 
 void executePortalConfig()
@@ -47,3 +48,4 @@ void saveParams(WiFiManagerParameter device_string_field)
   config_device_string = String(device_string_field.getValue());
   saveConfig();
 }
+#endif

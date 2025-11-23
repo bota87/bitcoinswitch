@@ -1,5 +1,6 @@
 #include "101_serial_config.h"
 
+#ifndef HARDCODED
 String fileContent = "";
 
 void executeSerialConfigForever()
@@ -118,3 +119,4 @@ void saveConfigFromFile()
 
   saveConfig();
 }
+#endif

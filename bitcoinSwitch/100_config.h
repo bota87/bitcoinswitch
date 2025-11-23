@@ -1,5 +1,18 @@
 #pragma once
 
+#define VERSION "v1.0.1"
+
+#define BOOTUP_TIMEOUT 2 // seconds
+#define CONFIG_NAME "config"
+
+// uncomment if you dont want to use the configuration file
+// #define HARDCODED
+
+// device specific configuration / defaults
+#define CONFIG_SSID "mywifi"
+#define CONFIG_PASSWORD "mypw"
+#define CONFIG_DEVICE_STRING ""
+
 #include <Arduino.h>
 
 #include "300_tft.h"

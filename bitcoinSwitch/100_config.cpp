@@ -1,21 +1,8 @@
 #include "100_config.h"
 
-#define VERSION "v1.0.1"
-
-#define BOOTUP_TIMEOUT 2 // seconds
-#define CONFIG_NAME "config"
-
 String config_ssid;
 String config_password;
 String config_device_string;
-
-// uncomment if you dont want to use the configuration file
-// #define HARDCODED
-
-// device specific configuration / defaults
-#define CONFIG_SSID "mywifi"
-#define CONFIG_PASSWORD "mypw"
-#define CONFIG_DEVICE_STRING ""
 
 #ifdef HARDCODED
 void setupConfig()
