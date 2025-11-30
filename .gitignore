@@ -8,3 +8,4 @@ build
 firmware.zip
 bitcoinSwitch/config-*.h
 bitcoinSwitch/bitcoinSwitch.ino.cpp
+.github
