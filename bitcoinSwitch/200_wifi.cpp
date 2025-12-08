@@ -12,9 +12,9 @@ void setupWifi()
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 #endif
   }
-  #ifdef LED_BUILTIN
-      digitalWrite(LED_BUILTIN, !LED_ON);
-  #endif
+#if defined(LED_BUILTIN) && defined(LED_ON)
+  digitalWrite(LED_BUILTIN, !LED_ON);
+#endif
 
   Serial.println();
   Serial.println("WiFi connection etablished!");
