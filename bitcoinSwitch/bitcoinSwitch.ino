@@ -19,11 +19,14 @@ void setup()
   setupConfig();
   setupWifi();
   setupWebSocket();
+  setupServo();
+  setupLight();
 }
 
 void loop()
 {
   loopWifi();
   loopWebSocket();
+  loopLight();
   delay(10); // to allow background processes
 }
