@@ -4,6 +4,7 @@ String config_ssid;
 String config_password;
 String config_device_string;
 String config_ap_password;
+int config_external_led;
 
 #ifdef HARDCODED
 void setupConfig()
@@ -45,6 +46,7 @@ bool readConfig()
     config_password = CONFIG_PASSWORD;
     config_device_string = CONFIG_DEVICE_STRING;
     config_ap_password = CONFIG_AP_PASSWORD;
+    config_external_led = CONFIG_EXTERNAL_LED;
 
     preferences.end();
     return false;
@@ -54,6 +56,7 @@ bool readConfig()
   config_password = preferences.getString("password", CONFIG_PASSWORD);
   config_device_string = preferences.getString("device_string", CONFIG_DEVICE_STRING);
   config_ap_password = preferences.getString("ap_password", CONFIG_AP_PASSWORD);
+  config_external_led = preferences.getInt("external_led", CONFIG_EXTERNAL_LED);
 
   preferences.end();
   return true;
@@ -122,6 +125,7 @@ void saveConfig()
   preferences.putString("password", config_password);
   preferences.putString("device_string", config_device_string);
   preferences.putString("ap_password", config_ap_password);
+  preferences.putInt("external_led", config_external_led);
 
   preferences.end();
 }

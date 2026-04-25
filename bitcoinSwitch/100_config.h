@@ -13,6 +13,7 @@
 #define CONFIG_PASSWORD "mypw"
 #define CONFIG_DEVICE_STRING ""
 #define CONFIG_AP_PASSWORD ""
+#define CONFIG_EXTERNAL_LED -1
 
 #include <Arduino.h>
 
@@ -27,6 +28,7 @@ extern String config_ssid;
 extern String config_password;
 extern String config_device_string;
 extern String config_ap_password;
+extern int config_external_led;
 void showWelcomeScreen();
 void setupConfig();
 

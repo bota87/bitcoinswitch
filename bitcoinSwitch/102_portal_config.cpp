@@ -28,10 +28,14 @@ void executePortalConfig()
 
   WiFiManagerParameter device_string_field("config_device_string", "Device string", config_device_string.c_str(), 200, "placeholder=\"wss://\"");
   wm.addParameter(&device_string_field);
+
+  WiFiManagerParameter external_led_field("config_external_led", "External LED pin (-1 = disabled)", String(config_external_led).c_str(), 5, "type='number' min='-1' max='48'");
+  wm.addParameter(&external_led_field);
+
   wm.setSaveConfigCallback([&wm]()
                            { saveWiFi(wm); });
-  wm.setSaveParamsCallback([&device_string_field, &ap_password_field]()
-                           { saveParams(device_string_field, ap_password_field); });
+  wm.setSaveParamsCallback([&device_string_field, &ap_password_field, &external_led_field]()
+                           { saveParams(device_string_field, ap_password_field, external_led_field); });
 
   Serial.println("Starting config portal...");
   wm.startConfigPortal(apName.c_str(), config_ap_password.c_str());
@@ -45,14 +49,17 @@ void saveWiFi(WiFiManager &wm)
   saveConfig();
 }
 
-void saveParams(WiFiManagerParameter device_string_field, WiFiManagerParameter ap_password_field)
+void saveParams(WiFiManagerParameter device_string_field, WiFiManagerParameter ap_password_field, WiFiManagerParameter external_led_field)
 {
   Serial.println("Save device string");
   config_device_string = String(device_string_field.getValue());
 
   Serial.println("Save AP password");
   config_ap_password = String(ap_password_field.getValue());
-  
+
+  Serial.println("Save external LED pin");
+  config_external_led = String(external_led_field.getValue()).toInt();
+
   saveConfig();
 }
 #endif

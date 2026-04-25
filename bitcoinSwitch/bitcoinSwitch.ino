@@ -12,11 +12,6 @@ void setup()
   printHome(false, false, false);
 #endif
 
-#if defined(LED_BUILTIN) && defined(LED_ON)
-  pinMode(LED_BUILTIN, OUTPUT); // To blink on board LED
-  digitalWrite(LED_BUILTIN, !LED_ON);
-#endif
-
 #ifdef BT1_PIN
   pinMode(BT1_PIN, INPUT_PULLUP);
 #endif

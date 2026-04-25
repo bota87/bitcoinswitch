@@ -1,4 +1,5 @@
 #include "201_web_socket.h"
+#include "200_wifi.h"
 
 WebSocketsClient webSocket;
 bool ping_toggle = false;
@@ -41,15 +42,12 @@ void loopWebSocket()
 {
     webSocket.loop();
 
-#if defined(LED_BUILTIN) && defined(LED_ON)
     if (lastPingTime != 0 && millis() - lastPingTime > PING_TIMEOUT_MS)
     {
         Serial.println("[WebSocket] Ping timeout, connection lost!");
-        digitalWrite(LED_BUILTIN, !LED_ON);
+        setStatusLed(false);
         lastPingTime = 0;
     }
-#endif
-
 }
 
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
@@ -58,34 +56,22 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     {
     case WStype_ERROR:
         Serial.printf("[WebSocket] Error: %s\n", payload);
-
-#if defined(LED_BUILTIN) && defined(LED_ON)
-        digitalWrite(LED_BUILTIN, !LED_ON);
+        setStatusLed(false);
         lastPingTime = 0;
-#endif
-
         printHome(true, false, false);
         break;
     case WStype_DISCONNECTED:
         Serial.println("[WebSocket] Disconnected!\n");
-
-#if defined(LED_BUILTIN) && defined(LED_ON)
-        digitalWrite(LED_BUILTIN, !LED_ON);
+        setStatusLed(false);
         lastPingTime = 0;
-#endif
-
         printHome(true, false, false);
         break;
     case WStype_CONNECTED:
         Serial.printf("[WebSocket] Connected to url: %s\n", payload);
         // send message to server when Connected
         webSocket.sendTXT("Connected");
-
-#if defined(LED_BUILTIN) && defined(LED_ON)
-        digitalWrite(LED_BUILTIN, LED_ON);
+        setStatusLed(true);
         lastPingTime = millis();
-#endif
-
         printHome(true, true, false);
         break;
     case WStype_TEXT:
@@ -104,12 +90,8 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
         break;
     case WStype_PING:
         Serial.printf("[WebSocket] Ping!\n");
-
-#if defined(LED_BUILTIN) && defined(LED_ON)
-        digitalWrite(LED_BUILTIN, LED_ON);
+        setStatusLed(true);
         lastPingTime = millis();
-#endif
-
         ping_toggle = !ping_toggle;
         printHome(true, true, ping_toggle);
         // pong will be sent automatically
@@ -150,14 +132,10 @@ void executePayment(uint8_t *payload)
   // the magic happens here
   pinMode(pin, OUTPUT);
   digitalWrite(pin, HIGH);
-#if defined(LED_BUILTIN) && defined(LED_ON)
-  digitalWrite(LED_BUILTIN, !LED_ON);
-#endif
+  setStatusLed(false);
   delay(time);
   digitalWrite(pin, LOW);
-#if defined(LED_BUILTIN) && defined(LED_ON)
-  digitalWrite(LED_BUILTIN, LED_ON);
-#endif
+  setStatusLed(true);
 
   printHome(true, true, false);
 }
