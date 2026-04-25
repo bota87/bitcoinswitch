@@ -32,10 +32,13 @@ void executePortalConfig()
   WiFiManagerParameter external_led_field("config_external_led", "External LED pin (-1 = disabled)", String(config_external_led).c_str(), 5, "type='number' min='-1' max='48'");
   wm.addParameter(&external_led_field);
 
+  WiFiManagerParameter external_tv_pin_field("config_external_tv_pin", "TV power PIN (-1 = disabled)", String(config_external_tv_pin).c_str(), 5, "type='number' min='-1' max='48'");
+  wm.addParameter(&external_tv_pin_field);
+
   wm.setSaveConfigCallback([&wm]()
                            { saveWiFi(wm); });
-  wm.setSaveParamsCallback([&device_string_field, &ap_password_field, &external_led_field]()
-                           { saveParams(device_string_field, ap_password_field, external_led_field); });
+  wm.setSaveParamsCallback([&device_string_field, &ap_password_field, &external_led_field, &external_tv_pin_field]()
+                           { saveParams(device_string_field, ap_password_field, external_led_field, external_tv_pin_field); });
 
   Serial.println("Starting config portal...");
   wm.startConfigPortal(apName.c_str(), config_ap_password.c_str());
@@ -49,7 +52,7 @@ void saveWiFi(WiFiManager &wm)
   saveConfig();
 }
 
-void saveParams(WiFiManagerParameter device_string_field, WiFiManagerParameter ap_password_field, WiFiManagerParameter external_led_field)
+void saveParams(WiFiManagerParameter device_string_field, WiFiManagerParameter ap_password_field, WiFiManagerParameter external_led_field, WiFiManagerParameter external_tv_pin_field)
 {
   Serial.println("Save device string");
   config_device_string = String(device_string_field.getValue());
@@ -59,6 +62,9 @@ void saveParams(WiFiManagerParameter device_string_field, WiFiManagerParameter a
 
   Serial.println("Save external LED pin");
   config_external_led = String(external_led_field.getValue()).toInt();
+
+  Serial.println("Save TV power pin");
+  config_external_tv_pin = String(external_tv_pin_field.getValue()).toInt();
 
   saveConfig();
 }

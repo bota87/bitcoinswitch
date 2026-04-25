@@ -5,6 +5,7 @@ String config_password;
 String config_device_string;
 String config_ap_password;
 int config_external_led;
+int config_external_tv_pin;
 
 #ifdef HARDCODED
 void setupConfig()
@@ -47,6 +48,7 @@ bool readConfig()
     config_device_string = CONFIG_DEVICE_STRING;
     config_ap_password = CONFIG_AP_PASSWORD;
     config_external_led = CONFIG_EXTERNAL_LED;
+    config_external_tv_pin = CONFIG_EXTERNAL_TV_PIN;
 
     preferences.end();
     return false;
@@ -57,6 +59,7 @@ bool readConfig()
   config_device_string = preferences.getString("device_string", CONFIG_DEVICE_STRING);
   config_ap_password = preferences.getString("ap_password", CONFIG_AP_PASSWORD);
   config_external_led = preferences.getInt("external_led", CONFIG_EXTERNAL_LED);
+  config_external_tv_pin = preferences.getInt("external_tv_pin", CONFIG_EXTERNAL_TV_PIN);
 
   preferences.end();
   return true;
@@ -141,6 +144,7 @@ void saveConfig()
   preferences.putString("device_string", config_device_string);
   preferences.putString("ap_password", config_ap_password);
   preferences.putInt("external_led", config_external_led);
+  preferences.putInt("external_tv_pin", config_external_tv_pin);
 
   preferences.end();
 }

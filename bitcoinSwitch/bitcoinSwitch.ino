@@ -17,6 +17,17 @@ void setup()
 #endif
 
   setupConfig();
+
+  if (config_external_tv_pin > -1)
+  {
+    // Aspetto 1 secondo e accendo la TV
+    delay(1000);
+    pinMode(config_external_tv_pin, OUTPUT);
+    digitalWrite(config_external_tv_pin, HIGH);
+    delay(500);
+    digitalWrite(config_external_tv_pin, LOW);
+  }
+
   setupWifi();
   setupWebSocket();
 }

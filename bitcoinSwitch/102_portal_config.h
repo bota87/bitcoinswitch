@@ -9,5 +9,5 @@
 
 void executePortalConfig();
 void saveWiFi(WiFiManager &wm);
-void saveParams(WiFiManagerParameter device_string_field, WiFiManagerParameter ap_password_field, WiFiManagerParameter external_led_field);
+void saveParams(WiFiManagerParameter device_string_field, WiFiManagerParameter ap_password_field, WiFiManagerParameter external_led_field, WiFiManagerParameter external_tv_pin_field);
 #endif
