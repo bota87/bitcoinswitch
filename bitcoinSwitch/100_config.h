@@ -1,6 +1,6 @@
 #pragma once
 
-#define VERSION "v1.0.1"
+#define VERSION "v1.1.0"
 
 #define BOOTUP_TIMEOUT 2 // seconds
 #define CONFIG_NAME "config"
@@ -12,6 +12,7 @@
 #define CONFIG_SSID "mywifi"
 #define CONFIG_PASSWORD "mypw"
 #define CONFIG_DEVICE_STRING ""
+#define CONFIG_AP_PASSWORD ""
 
 #include <Arduino.h>
 
@@ -25,7 +26,7 @@
 extern String config_ssid;
 extern String config_password;
 extern String config_device_string;
-
+extern String config_ap_password;
 void showWelcomeScreen();
 void setupConfig();
 
@@ -34,4 +35,5 @@ bool readConfig();
 void executeConfigBoot();
 void clearConfig();
 void saveConfig();
+void checkFactoryReset();
 #endif

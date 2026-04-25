@@ -1,7 +1,6 @@
 #include "102_portal_config.h"
 
 #ifndef HARDCODED
-#define AP_PASSWORD "111222333"
 
 void executePortalConfig()
 {
@@ -23,15 +22,19 @@ void executePortalConfig()
   wm.setConnectTimeout(15);
 
   readConfig();
+
+  WiFiManagerParameter ap_password_field("config_ap_password", "Config portal password (leave empty for open AP)", config_ap_password.c_str(), 64, "type='password'");
+  wm.addParameter(&ap_password_field);
+
   WiFiManagerParameter device_string_field("config_device_string", "Device string", config_device_string.c_str(), 200, "placeholder=\"wss://\"");
   wm.addParameter(&device_string_field);
   wm.setSaveConfigCallback([&wm]()
                            { saveWiFi(wm); });
-  wm.setSaveParamsCallback([&device_string_field]()
-                           { saveParams(device_string_field); });
+  wm.setSaveParamsCallback([&device_string_field, &ap_password_field]()
+                           { saveParams(device_string_field, ap_password_field); });
 
   Serial.println("Starting config portal...");
-  wm.startConfigPortal(apName.c_str(), AP_PASSWORD);
+  wm.startConfigPortal(apName.c_str(), config_ap_password.c_str());
 }
 
 void saveWiFi(WiFiManager &wm)
@@ -42,10 +45,14 @@ void saveWiFi(WiFiManager &wm)
   saveConfig();
 }
 
-void saveParams(WiFiManagerParameter device_string_field)
+void saveParams(WiFiManagerParameter device_string_field, WiFiManagerParameter ap_password_field)
 {
   Serial.println("Save device string");
   config_device_string = String(device_string_field.getValue());
+
+  Serial.println("Save AP password");
+  config_ap_password = String(ap_password_field.getValue());
+  
   saveConfig();
 }
 #endif

@@ -3,6 +3,7 @@
 String config_ssid;
 String config_password;
 String config_device_string;
+String config_ap_password;
 
 #ifdef HARDCODED
 void setupConfig()
@@ -43,7 +44,8 @@ bool readConfig()
     config_ssid = CONFIG_SSID;
     config_password = CONFIG_PASSWORD;
     config_device_string = CONFIG_DEVICE_STRING;
-    
+    config_ap_password = CONFIG_AP_PASSWORD;
+
     preferences.end();
     return false;
   }
@@ -51,6 +53,7 @@ bool readConfig()
   config_ssid = preferences.getString("ssid", CONFIG_SSID);
   config_password = preferences.getString("password", CONFIG_PASSWORD);
   config_device_string = preferences.getString("device_string", CONFIG_DEVICE_STRING);
+  config_ap_password = preferences.getString("ap_password", CONFIG_AP_PASSWORD);
 
   preferences.end();
   return true;
@@ -77,7 +80,6 @@ void executeConfigBoot()
 #endif
 
 #ifdef BT1_PIN
-    pinMode(BT1_PIN, INPUT_PULLUP);
     if (digitalRead(BT1_PIN) == LOW)
     {
       Serial.println("Button pressed");
@@ -119,8 +121,37 @@ void saveConfig()
   preferences.putString("ssid", config_ssid);
   preferences.putString("password", config_password);
   preferences.putString("device_string", config_device_string);
+  preferences.putString("ap_password", config_ap_password);
 
   preferences.end();
+}
+
+void checkFactoryReset()
+{
+#ifdef BT1_PIN
+  if (digitalRead(BT1_PIN) != LOW)
+    return;
+
+  Serial.println("Factory reset in 5 seconds. Release button to cancel.");
+
+  for (int i = 5; i > 0; i--)
+  {
+    Serial.println("Factory reset in " + String(i) + "...");
+    for (int j = 0; j < 10; j++)
+    {
+      delay(100);
+      if (digitalRead(BT1_PIN) != LOW)
+      {
+        Serial.println("Factory reset cancelled.");
+        return;
+      }
+    }
+  }
+
+  clearConfig();
+  Serial.println("Factory reset done. Restarting...");
+  ESP.restart();
+#endif
 }
 #endif
 

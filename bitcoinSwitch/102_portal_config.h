@@ -9,5 +9,5 @@
 
 void executePortalConfig();
 void saveWiFi(WiFiManager &wm);
-void saveParams(WiFiManagerParameter device_string_field);
+void saveParams(WiFiManagerParameter device_string_field, WiFiManagerParameter ap_password_field);
 #endif

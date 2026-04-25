@@ -17,6 +17,14 @@ void setup()
   digitalWrite(LED_BUILTIN, !LED_ON);
 #endif
 
+#ifdef BT1_PIN
+  pinMode(BT1_PIN, INPUT_PULLUP);
+#endif
+
+#ifndef HARDCODED
+  checkFactoryReset();
+#endif
+
   setupConfig();
   setupWifi();
   setupWebSocket();
