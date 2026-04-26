@@ -16,10 +16,6 @@ void setup()
   pinMode(BT1_PIN, INPUT_PULLUP);
 #endif
 
-#ifndef HARDCODED
-  checkFactoryReset();
-#endif
-
   setupConfig();
   setupWifi();
   setupWebSocket();

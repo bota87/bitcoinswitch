@@ -85,7 +85,22 @@ void executeConfigBoot()
 #ifdef BT1_PIN
     if (digitalRead(BT1_PIN) == LOW)
     {
-      Serial.println("Button pressed");
+      Serial.println("Button pressed. Hold 5 seconds for factory reset.");
+      int holdCount = 0;
+      while (digitalRead(BT1_PIN) == LOW)
+      {
+        delay(100);
+        holdCount++;
+        if (holdCount >= 50)
+        {
+          Serial.println("Factory reset...");
+          clearConfig();
+          Serial.println("Factory reset done. Restarting...");
+          ESP.restart();
+          return;
+        }
+      }
+      Serial.println("Button released, entering portal config.");
       executePortalConfig();
       return;
     }
@@ -130,33 +145,6 @@ void saveConfig()
   preferences.end();
 }
 
-void checkFactoryReset()
-{
-#ifdef BT1_PIN
-  if (digitalRead(BT1_PIN) != LOW)
-    return;
-
-  Serial.println("Factory reset in 5 seconds. Release button to cancel.");
-
-  for (int i = 5; i > 0; i--)
-  {
-    Serial.println("Factory reset in " + String(i) + "...");
-    for (int j = 0; j < 10; j++)
-    {
-      delay(100);
-      if (digitalRead(BT1_PIN) != LOW)
-      {
-        Serial.println("Factory reset cancelled.");
-        return;
-      }
-    }
-  }
-
-  clearConfig();
-  Serial.println("Factory reset done. Restarting...");
-  ESP.restart();
-#endif
-}
 #endif
 
 void showWelcomeScreen()

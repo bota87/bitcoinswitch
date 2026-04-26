@@ -37,5 +37,4 @@ bool readConfig();
 void executeConfigBoot();
 void clearConfig();
 void saveConfig();
-void checkFactoryReset();
 #endif
