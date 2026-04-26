@@ -2,6 +2,7 @@
 #include "200_wifi.h"
 #include "201_web_socket.h"
 #include "300_tft.h"
+#include "500_coin.h"
 
 void setup()
 {
@@ -19,11 +20,13 @@ void setup()
   setupConfig();
   setupWifi();
   setupWebSocket();
+  setupCoin();
 }
 
 void loop()
 {
   loopWifi();
   loopWebSocket();
+  loopCoin();
   delay(10); // to allow background processes
 }

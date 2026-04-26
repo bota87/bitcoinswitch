@@ -94,36 +94,33 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
 
 void executePayment(uint8_t *payload)
 {
-  printTFT("Payment received!", 21, 15);
-  flashTFT();
+    printTFT("Payment received!", 21, 15);
+    flashTFT();
 
-  String parts[3]; // pin, time, comment
-  // format: {pin-time-comment} where comment is optional
-  String payloadStr = String((char *)payload);
-  int numParts = splitString(payloadStr, '-', parts, 3);
+    String parts[3]; // pin, time, comment
+    // format: {pin-time-comment} where comment is optional
+    String payloadStr = String((char *)payload);
+    int numParts = splitString(payloadStr, '-', parts, 3);
 
-  int pin = parts[0].toInt();
-  printTFT("Pin: " + String(pin), 21, 35);
+    int pin = parts[0].toInt();
+    printTFT("Pin: " + String(pin), 21, 35);
 
-  int time = parts[1].toInt();
-  printTFT("Time: " + String(time), 21, 55);
+    int time = parts[1].toInt();
+    printTFT("Time: " + String(time), 21, 55);
 
-  String comment = "";
-  if (numParts == 3)
-  {
-    comment = parts[2];
-    Serial.println("[WebSocket] received comment: " + comment);
-    printTFT("Comment: " + comment, 21, 75);
-  }
-  Serial.println("[WebSocket] received pin: " + String(pin) + ", duration: " + String(time));
+    String comment = "";
+    if (numParts == 3)
+    {
+        comment = parts[2];
+        Serial.println("[WebSocket] received comment: " + comment);
+        printTFT("Comment: " + comment, 21, 75);
+    }
+    Serial.println("[WebSocket] received pin: " + String(pin) + ", duration: " + String(time));
 
-  // the magic happens here
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, HIGH);
-  setStatusLed(false);
-  delay(time);
-  digitalWrite(pin, LOW);
-  setStatusLed(true);
+    // the magic happens here
+    setStatusLed(false);
+    inviaImporto(time / 100.0); // su time ho l'importo in centesimi
+    setStatusLed(true);
 
-  printHome(true, true, false);
+    printHome(true, true, false);
 }

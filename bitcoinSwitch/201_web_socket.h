@@ -6,6 +6,7 @@
 #include "100_config.h"
 #include "300_tft.h"
 #include "400_split_string.h"
+#include "500_coin.h"
 
 void setupWebSocket();
 void loopWebSocket();
