@@ -4,9 +4,6 @@
 WebSocketsClient webSocket;
 bool ping_toggle = false;
 
-#define PING_TIMEOUT_MS 25000
-unsigned long lastPingTime = 0;
-
 void setupWebSocket()
 {
     if (config_device_string == "")
@@ -36,18 +33,13 @@ void setupWebSocket()
 
     webSocket.onEvent(webSocketEvent);
     webSocket.setReconnectInterval(1000);
+    // Send a ping every 5s; disconnect if pong missing 2 times in a row (~6-11s detection)
+    webSocket.enableHeartbeat(5000, 3000, 2);
 }
 
 void loopWebSocket()
 {
     webSocket.loop();
-
-    if (lastPingTime != 0 && millis() - lastPingTime > PING_TIMEOUT_MS)
-    {
-        Serial.println("[WebSocket] Ping timeout, connection lost!");
-        setStatusLed(false);
-        lastPingTime = 0;
-    }
 }
 
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
@@ -57,13 +49,11 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     case WStype_ERROR:
         Serial.printf("[WebSocket] Error: %s\n", payload);
         setStatusLed(false);
-        lastPingTime = 0;
         printHome(true, false, false);
         break;
     case WStype_DISCONNECTED:
         Serial.println("[WebSocket] Disconnected!\n");
         setStatusLed(false);
-        lastPingTime = 0;
         printHome(true, false, false);
         break;
     case WStype_CONNECTED:
@@ -71,7 +61,6 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
         // send message to server when Connected
         webSocket.sendTXT("Connected");
         setStatusLed(true);
-        lastPingTime = millis();
         printHome(true, true, false);
         break;
     case WStype_TEXT:
@@ -91,7 +80,6 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     case WStype_PING:
         Serial.printf("[WebSocket] Ping!\n");
         setStatusLed(true);
-        lastPingTime = millis();
         ping_toggle = !ping_toggle;
         printHome(true, true, ping_toggle);
         // pong will be sent automatically
